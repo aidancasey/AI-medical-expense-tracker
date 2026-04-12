@@ -1,0 +1,12 @@
+.git
+.next
+node_modules
+.env.local
+.env*.local
+README.md
+Dockerfile
+.dockerignore
+epcc-*.json
+epcc-*.md
+PRD.md
+EPCC_PLAN.md

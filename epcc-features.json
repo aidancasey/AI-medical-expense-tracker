@@ -1,0 +1,391 @@
+{
+  "_warning": "Feature definitions are IMMUTABLE. Only 'passes', 'status', 'subtasks[].status', 'verifiedAt', and 'commit' fields may be modified. IT IS CATASTROPHIC TO REMOVE OR EDIT FEATURE DEFINITIONS.",
+  "_planApproved": true,
+  "project": "MedExpense Tracker",
+  "created": "2026-04-10T00:00:00Z",
+  "lastUpdated": "2026-04-10T00:00:00Z",
+  "source": "PRD.md",
+  "features": [
+    {
+      "id": "F001",
+      "name": "Google OAuth Login",
+      "description": "Sign in with Gmail account to access Google Drive and Sheets",
+      "priority": "P0",
+      "status": "verified",
+      "passes": true,
+      "verifiedAt": "2026-04-10T00:00:00Z",
+      "implementationOrder": 1,
+      "dependencies": [],
+      "estimatedHours": 6,
+      "planReference": "EPCC_PLAN.md#phase-1-project-setup--auth",
+      "acceptanceCriteria": [
+        "User can sign in with their Google account",
+        "OAuth scopes include drive.file, spreadsheets, and userinfo.email",
+        "Session persists across page refreshes",
+        "User can sign out"
+      ],
+      "subtasks": [
+        {"name": "Initialise Next.js project with TypeScript + Tailwind", "status": "complete", "estimatedHours": 0.5},
+        {"name": "Set up Google Cloud Console project and write README setup guide", "status": "complete", "estimatedHours": 1.5},
+        {"name": "Integrate NextAuth.js with Google provider and OAuth scopes", "status": "complete", "estimatedHours": 2},
+        {"name": "Build login page and auth-protected layout", "status": "complete", "estimatedHours": 1},
+        {"name": "Test OAuth flow end-to-end", "status": "complete", "estimatedHours": 1}
+      ],
+      "files": [
+        "src/lib/auth.ts",
+        "src/types/next-auth.d.ts",
+        "src/app/api/auth/[...nextauth]/route.ts",
+        "src/app/page.tsx",
+        "src/app/(authenticated)/layout.tsx"
+      ],
+      "source": "PRD.md#must-have-p0"
+    },
+    {
+      "id": "F002",
+      "name": "Receipt Upload",
+      "description": "Web form to upload JPG or PDF receipt files from any device",
+      "priority": "P0",
+      "status": "verified",
+      "passes": true,
+      "verifiedAt": "2026-04-10T00:00:00Z",
+      "implementationOrder": 2,
+      "dependencies": ["F001"],
+      "estimatedHours": 3,
+      "planReference": "EPCC_PLAN.md#phase-2-upload--ocr",
+      "acceptanceCriteria": [
+        "Upload form accepts JPG/JPEG files",
+        "Upload form accepts PDF files",
+        "Form is mobile-responsive and works on iPhone Safari/Chrome",
+        "Upload rejects unsupported file types with clear error message",
+        "One receipt uploaded at a time"
+      ],
+      "subtasks": [
+        {"name": "Build upload page with drag-and-drop and file picker", "status": "complete", "estimatedHours": 2},
+        {"name": "Create POST /api/upload route to receive and validate files", "status": "complete", "estimatedHours": 1}
+      ],
+      "files": [
+        "src/app/(authenticated)/upload/page.tsx",
+        "src/app/api/upload/route.ts"
+      ],
+      "source": "PRD.md#must-have-p0"
+    },
+    {
+      "id": "F003",
+      "name": "OCR & Data Extraction",
+      "description": "Extract text from receipt using Tesseract and parse into structured fields",
+      "priority": "P0",
+      "status": "verified",
+      "passes": true,
+      "verifiedAt": "2026-04-10T00:00:00Z",
+      "implementationOrder": 3,
+      "dependencies": ["F002"],
+      "estimatedHours": 9,
+      "planReference": "EPCC_PLAN.md#phase-2-upload--ocr",
+      "acceptanceCriteria": [
+        "Extracts text from JPG images using Tesseract",
+        "Extracts text from PDF files",
+        "Parses patient name from extracted text",
+        "Fuzzy matches patient name to known family members (full or first name)",
+        "Extracts invoice amount in EUR",
+        "Extracts invoice date",
+        "Identifies practitioner type (GP, dentist, physio, etc.)",
+        "Identifies treatment description",
+        "Classifies expense as Med 1 or Med 2",
+        "Flags low-confidence fields for manual review"
+      ],
+      "subtasks": [
+        {"name": "Integrate Tesseract.js for JPG OCR on server side", "status": "complete", "estimatedHours": 1.5},
+        {"name": "Add PDF text extraction (pdf-parse v1.1.1)", "status": "complete", "estimatedHours": 1.5},
+        {"name": "Build field parser for date, amount, name, practitioner, treatment", "status": "complete", "estimatedHours": 2},
+        {"name": "Implement fuzzy name matching against family members", "status": "complete", "estimatedHours": 1},
+        {"name": "Build Med 1 / Med 2 classifier", "status": "complete", "estimatedHours": 1.5},
+        {"name": "Implement confidence scoring for extracted fields", "status": "complete", "estimatedHours": 1.5}
+      ],
+      "files": [
+        "src/lib/ocr.ts",
+        "src/lib/parser.ts",
+        "src/lib/constants.ts"
+      ],
+      "knownIssues": [
+        "Tesseract.js requires explicit workerPath set to process.cwd() + node_modules path — see ocr.ts",
+        "pdf-parse must be required as 'pdf-parse/lib/pdf-parse.js' to avoid self-test ENOENT bug",
+        "pdf-parse pinned to v1.1.1 — v2 uses pdfjs-dist v4 which crashes with DOMMatrix error in Next.js"
+      ],
+      "source": "PRD.md#must-have-p0"
+    },
+    {
+      "id": "F004",
+      "name": "Review & Confirmation Screen",
+      "description": "Display extracted data in editable form for user to review and confirm",
+      "priority": "P0",
+      "status": "verified",
+      "passes": true,
+      "verifiedAt": "2026-04-10T00:00:00Z",
+      "implementationOrder": 4,
+      "dependencies": ["F003"],
+      "estimatedHours": 4,
+      "planReference": "EPCC_PLAN.md#phase-4-review--confirmation-ui",
+      "acceptanceCriteria": [
+        "All extracted fields displayed in editable form",
+        "Low-confidence fields visually highlighted",
+        "Family member selectable from dropdown of 5 known members",
+        "Med 1 / Med 2 category selectable",
+        "Reimbursement section: checkbox, insurer name, reimbursed amount",
+        "Confirm button saves the expense",
+        "Cancel button discards without saving"
+      ],
+      "subtasks": [
+        {"name": "Build review form with editable pre-populated fields", "status": "complete", "estimatedHours": 2},
+        {"name": "Add low-confidence field highlighting", "status": "complete", "estimatedHours": 0.5},
+        {"name": "Add dropdowns, selectors, and reimbursement section", "status": "complete", "estimatedHours": 1},
+        {"name": "Add receipt image/PDF preview alongside form", "status": "complete", "estimatedHours": 0.5}
+      ],
+      "files": [
+        "src/app/(authenticated)/review/page.tsx"
+      ],
+      "source": "PRD.md#must-have-p0"
+    },
+    {
+      "id": "F005",
+      "name": "Google Drive Storage",
+      "description": "Save receipt file to Google Drive with structured naming convention",
+      "priority": "P0",
+      "status": "verified",
+      "passes": true,
+      "verifiedAt": "2026-04-10T00:00:00Z",
+      "implementationOrder": 5,
+      "dependencies": ["F001"],
+      "estimatedHours": 4,
+      "planReference": "EPCC_PLAN.md#phase-5-google-drive-integration",
+      "acceptanceCriteria": [
+        "Receipt saved to Medical/[year]/expenses/ folder in Google Drive",
+        "File renamed to YYYY-MM-DD_[FamilyMember]_[PractitionerType]_EURAmount.ext",
+        "Year folder auto-created if it does not exist",
+        "Expenses subfolder auto-created if it does not exist",
+        "Original file format preserved (JPG stays JPG, PDF stays PDF)"
+      ],
+      "subtasks": [
+        {"name": "Create Drive service: find-or-create folder by path", "status": "complete", "estimatedHours": 1.5},
+        {"name": "Implement file upload with naming convention and shareable link", "status": "complete", "estimatedHours": 1.5},
+        {"name": "Handle multi-year folder creation from expense date", "status": "complete", "estimatedHours": 1}
+      ],
+      "files": [
+        "src/lib/google-drive.ts"
+      ],
+      "source": "PRD.md#must-have-p0"
+    },
+    {
+      "id": "F006",
+      "name": "Google Spreadsheet Logging",
+      "description": "Write expense details as a row in Google Sheets with receipt link",
+      "priority": "P0",
+      "status": "verified",
+      "passes": true,
+      "verifiedAt": "2026-04-10T00:00:00Z",
+      "implementationOrder": 6,
+      "dependencies": ["F001"],
+      "estimatedHours": 4,
+      "planReference": "EPCC_PLAN.md#phase-6-google-sheets-integration",
+      "acceptanceCriteria": [
+        "Row written with all required columns: Date, Family Member, Practitioner Type, Treatment Description, Amount, Med 1/Med 2, Reimbursed, Insurer Name, Reimbursed Amount, Net Claimable Amount, Receipt Link, Upload Date",
+        "Receipt Link is a clickable Google Drive URL",
+        "Net Claimable Amount calculated as Amount minus Reimbursed Amount",
+        "Row written to correct year tab",
+        "New year tab auto-created when year changes",
+        "Spreadsheet auto-created on first use if it does not exist"
+      ],
+      "subtasks": [
+        {"name": "Create Sheets service: find-or-create spreadsheet and year tab with headers", "status": "complete", "estimatedHours": 1.5},
+        {"name": "Implement append row with all columns and Net Claimable calculation", "status": "complete", "estimatedHours": 1},
+        {"name": "Handle multi-year tab creation from expense date", "status": "complete", "estimatedHours": 0.5},
+        {"name": "Create POST /api/expenses route orchestrating Drive + Sheets", "status": "complete", "estimatedHours": 1}
+      ],
+      "files": [
+        "src/lib/google-sheets.ts",
+        "src/app/api/expenses/route.ts"
+      ],
+      "source": "PRD.md#must-have-p0"
+    },
+    {
+      "id": "F007",
+      "name": "Multi-Year Support",
+      "description": "Automatically manage year-based folder structure and spreadsheet tabs",
+      "priority": "P0",
+      "status": "verified",
+      "passes": true,
+      "verifiedAt": "2026-04-10T00:00:00Z",
+      "implementationOrder": 5,
+      "dependencies": ["F005", "F006"],
+      "estimatedHours": 0,
+      "planReference": "EPCC_PLAN.md#phase-5-google-drive-integration",
+      "acceptanceCriteria": [
+        "Expense year detected from invoice date, not upload date",
+        "Google Drive folder created for new year automatically",
+        "Google Sheet tab created for new year automatically",
+        "Historical receipts (e.g. 2026 receipt uploaded in 2027) filed correctly"
+      ],
+      "subtasks": [],
+      "source": "PRD.md#must-have-p0",
+      "_note": "Multi-year logic is built into F005 and F006 — year derived from expense date field"
+    },
+    {
+      "id": "F-DEPLOY",
+      "name": "Cloud Run Deployment",
+      "description": "Deploy app to Google Cloud Run via GitHub Actions CI/CD",
+      "priority": "P0",
+      "status": "in_progress",
+      "passes": false,
+      "implementationOrder": 7,
+      "dependencies": ["F001", "F002", "F003", "F004", "F005", "F006"],
+      "estimatedHours": 2,
+      "acceptanceCriteria": [
+        "App accessible at a public Cloud Run URL",
+        "Google OAuth redirect URI updated in Cloud Console for production URL",
+        "All environment variables set as Cloud Run secrets",
+        "Push to main branch triggers automatic redeploy via GitHub Actions",
+        "OCR works correctly in container (Tesseract language data downloads at runtime)"
+      ],
+      "subtasks": [
+        {"name": "Create Dockerfile with multi-stage build (standalone Next.js output)", "status": "complete"},
+        {"name": "Create .dockerignore", "status": "complete"},
+        {"name": "Enable output: standalone in next.config.ts", "status": "complete"},
+        {"name": "Create .github/workflows/deploy.yml", "status": "complete"},
+        {"name": "Push code to GitHub repository", "status": "pending"},
+        {"name": "Create GCP service account 'github-actions' with run.admin + artifactregistry.writer + iam.serviceAccountUser roles", "status": "pending"},
+        {"name": "Export service account key JSON and add as GCP_SA_KEY secret in GitHub", "status": "pending"},
+        {"name": "Add all app secrets to GitHub (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXTAUTH_SECRET, NEXTAUTH_URL, GOOGLE_SPREADSHEET_ID, GCP_PROJECT_ID)", "status": "pending"},
+        {"name": "Enable Cloud Run and Artifact Registry APIs: gcloud services enable run.googleapis.com artifactregistry.googleapis.com", "status": "pending"},
+        {"name": "Create Artifact Registry repo: gcloud artifacts repositories create medexpense --repository-format=docker --location=europe-west1", "status": "pending"},
+        {"name": "Push to main to trigger first deployment", "status": "pending"},
+        {"name": "Add Cloud Run production URL to OAuth authorised redirect URIs", "status": "pending"},
+        {"name": "Update NEXTAUTH_URL secret in GitHub to production Cloud Run URL and redeploy", "status": "pending"},
+        {"name": "Smoke test: upload a receipt on production URL", "status": "pending"}
+      ],
+      "commands": {
+        "createServiceAccount": "gcloud iam service-accounts create github-actions --display-name='GitHub Actions deployer'",
+        "grantRoles": [
+          "gcloud projects add-iam-policy-binding PROJECT_ID --member='serviceAccount:github-actions@PROJECT_ID.iam.gserviceaccount.com' --role='roles/run.admin'",
+          "gcloud projects add-iam-policy-binding PROJECT_ID --member='serviceAccount:github-actions@PROJECT_ID.iam.gserviceaccount.com' --role='roles/artifactregistry.writer'",
+          "gcloud projects add-iam-policy-binding PROJECT_ID --member='serviceAccount:github-actions@PROJECT_ID.iam.gserviceaccount.com' --role='roles/iam.serviceAccountUser'"
+        ],
+        "exportKey": "gcloud iam service-accounts keys create gha-key.json --iam-account=github-actions@PROJECT_ID.iam.gserviceaccount.com",
+        "enableApis": "gcloud services enable run.googleapis.com artifactregistry.googleapis.com",
+        "createRegistry": "gcloud artifacts repositories create medexpense --repository-format=docker --location=europe-west1"
+      },
+      "source": "deployment"
+    },
+    {
+      "id": "F008",
+      "name": "Tax Summary View",
+      "description": "Per-year summary with Med 1/Med 2 totals and family member breakdown",
+      "priority": "P1",
+      "status": "pending",
+      "passes": false,
+      "implementationOrder": 8,
+      "dependencies": ["F006"],
+      "estimatedHours": 3.5,
+      "planReference": "EPCC_PLAN.md#phase-8-p1-features",
+      "acceptanceCriteria": [
+        "Shows total expenses per year",
+        "Breakdown by Med 1 and Med 2 categories",
+        "Breakdown by family member",
+        "Shows total reimbursed vs net claimable amounts",
+        "Figures directly usable for Med 1 / Med 2 tax return forms"
+      ],
+      "subtasks": [
+        {"name": "Tax summary page: aggregate totals by category and family member", "status": "pending", "estimatedHours": 2.5},
+        {"name": "Format summary for Med 1 / Med 2 tax return sections", "status": "pending", "estimatedHours": 1}
+      ],
+      "source": "PRD.md#should-have-p1"
+    },
+    {
+      "id": "F009",
+      "name": "Expense List View",
+      "description": "Table view of all logged expenses with filtering",
+      "priority": "P1",
+      "status": "pending",
+      "passes": false,
+      "implementationOrder": 9,
+      "dependencies": ["F006"],
+      "estimatedHours": 4.5,
+      "planReference": "EPCC_PLAN.md#phase-8-p1-features",
+      "acceptanceCriteria": [
+        "All expenses displayed in a sortable table",
+        "Filter by year",
+        "Filter by family member",
+        "Filter by Med 1 / Med 2 category",
+        "Clickable link to receipt in Google Drive"
+      ],
+      "subtasks": [
+        {"name": "GET /api/expenses route: read rows from Google Sheets API", "status": "pending", "estimatedHours": 1.5},
+        {"name": "Expense list page: display sortable table", "status": "pending", "estimatedHours": 2},
+        {"name": "Add filters for year, family member, category", "status": "pending", "estimatedHours": 1}
+      ],
+      "source": "PRD.md#should-have-p1"
+    },
+    {
+      "id": "F010",
+      "name": "Bulk Upload",
+      "description": "Upload multiple receipts in one session for sequential processing",
+      "priority": "P2",
+      "status": "pending",
+      "passes": false,
+      "implementationOrder": 10,
+      "dependencies": ["F002", "F003", "F004"],
+      "estimatedHours": 3,
+      "planReference": "PRD.md#nice-to-have-p2",
+      "acceptanceCriteria": [
+        "User can select multiple files at once",
+        "Files processed sequentially with review step for each",
+        "Progress indicator shows queue status"
+      ],
+      "subtasks": [],
+      "source": "PRD.md#nice-to-have-p2"
+    },
+    {
+      "id": "F011",
+      "name": "Edit Previously Logged Expense",
+      "description": "Modify a previously saved expense from the web UI",
+      "priority": "P2",
+      "status": "pending",
+      "passes": false,
+      "implementationOrder": 11,
+      "dependencies": ["F009"],
+      "estimatedHours": 3,
+      "planReference": "PRD.md#nice-to-have-p2",
+      "acceptanceCriteria": [
+        "User can select an expense from the list and edit it",
+        "Changes update the Google Spreadsheet row",
+        "Reimbursement status can be updated after initial entry"
+      ],
+      "subtasks": [],
+      "source": "PRD.md#nice-to-have-p2"
+    },
+    {
+      "id": "F012",
+      "name": "Dashboard",
+      "description": "Year-to-date spending overview with charts",
+      "priority": "P2",
+      "status": "pending",
+      "passes": false,
+      "implementationOrder": 12,
+      "dependencies": ["F009"],
+      "estimatedHours": 4,
+      "planReference": "PRD.md#nice-to-have-p2",
+      "acceptanceCriteria": [
+        "Year-to-date total spending displayed",
+        "Spending breakdown by category chart",
+        "Spending breakdown by family member chart"
+      ],
+      "subtasks": [],
+      "source": "PRD.md#nice-to-have-p2"
+    }
+  ],
+  "metrics": {
+    "total": 13,
+    "verified": 7,
+    "inProgress": 1,
+    "pending": 5,
+    "percentComplete": 54
+  }
+}
