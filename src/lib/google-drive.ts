@@ -71,15 +71,6 @@ export async function uploadReceiptToDrive(
     fields: "id, webViewLink",
   });
 
-  // Make file viewable via link
-  await drive.permissions.create({
-    fileId: uploaded.data.id!,
-    requestBody: {
-      role: "reader",
-      type: "anyone",
-    },
-  });
-
   return {
     fileId: uploaded.data.id!,
     webViewLink:
