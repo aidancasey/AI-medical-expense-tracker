@@ -35,10 +35,10 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Tesseract.js standalone build trims node_modules — copy the full package
-# so its internal requires (e.g. require('..')) resolve correctly at runtime
-COPY --from=builder /app/node_modules/tesseract.js ./node_modules/tesseract.js
-COPY --from=builder /app/node_modules/tesseract.js/src ./node_modules/tesseract.js/src
+# Next.js standalone trims node_modules — Tesseract.js worker has deep
+# transitive dependencies that get stripped. Copy full node_modules to
+# ensure all requires resolve correctly at runtime.
+COPY --from=builder /app/node_modules ./node_modules
 
 USER nextjs
 
