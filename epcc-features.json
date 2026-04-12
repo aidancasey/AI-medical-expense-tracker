@@ -3,7 +3,7 @@
   "_planApproved": true,
   "project": "MedExpense Tracker",
   "created": "2026-04-10T00:00:00Z",
-  "lastUpdated": "2026-04-10T00:00:00Z",
+  "lastUpdated": "2026-04-12T00:00:00Z",
   "source": "PRD.md",
   "features": [
     {
@@ -233,8 +233,9 @@
       "name": "Cloud Run Deployment",
       "description": "Deploy app to Google Cloud Run via GitHub Actions CI/CD",
       "priority": "P0",
-      "status": "in_progress",
-      "passes": false,
+      "status": "verified",
+      "passes": true,
+      "verifiedAt": "2026-04-12T00:00:00Z",
       "implementationOrder": 7,
       "dependencies": ["F001", "F002", "F003", "F004", "F005", "F006"],
       "estimatedHours": 2,
@@ -250,16 +251,16 @@
         {"name": "Create .dockerignore", "status": "complete"},
         {"name": "Enable output: standalone in next.config.ts", "status": "complete"},
         {"name": "Create .github/workflows/deploy.yml", "status": "complete"},
-        {"name": "Push code to GitHub repository", "status": "pending"},
-        {"name": "Create GCP service account 'github-actions' with run.admin + artifactregistry.writer + iam.serviceAccountUser roles", "status": "pending"},
-        {"name": "Export service account key JSON and add as GCP_SA_KEY secret in GitHub", "status": "pending"},
-        {"name": "Add all app secrets to GitHub (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXTAUTH_SECRET, NEXTAUTH_URL, GOOGLE_SPREADSHEET_ID, GCP_PROJECT_ID)", "status": "pending"},
-        {"name": "Enable Cloud Run and Artifact Registry APIs: gcloud services enable run.googleapis.com artifactregistry.googleapis.com", "status": "pending"},
-        {"name": "Create Artifact Registry repo: gcloud artifacts repositories create medexpense --repository-format=docker --location=europe-west1", "status": "pending"},
-        {"name": "Push to main to trigger first deployment", "status": "pending"},
-        {"name": "Add Cloud Run production URL to OAuth authorised redirect URIs", "status": "pending"},
-        {"name": "Update NEXTAUTH_URL secret in GitHub to production Cloud Run URL and redeploy", "status": "pending"},
-        {"name": "Smoke test: upload a receipt on production URL", "status": "pending"}
+        {"name": "Push code to GitHub repository", "status": "complete"},
+        {"name": "Create GCP service account 'github-actions' with run.admin + artifactregistry.writer + iam.serviceAccountUser roles", "status": "complete"},
+        {"name": "Export service account key JSON and add as GCP_SA_KEY secret in GitHub", "status": "complete"},
+        {"name": "Add all app secrets to GitHub (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXTAUTH_SECRET, NEXTAUTH_URL, GOOGLE_SPREADSHEET_ID, GCP_PROJECT_ID)", "status": "complete"},
+        {"name": "Enable Cloud Run and Artifact Registry APIs: gcloud services enable run.googleapis.com artifactregistry.googleapis.com", "status": "complete"},
+        {"name": "Create Artifact Registry repo: gcloud artifacts repositories create medexpense --repository-format=docker --location=europe-west1", "status": "complete"},
+        {"name": "Push to main to trigger first deployment", "status": "complete"},
+        {"name": "Add Cloud Run production URL to OAuth authorised redirect URIs", "status": "complete"},
+        {"name": "Update NEXTAUTH_URL secret in GitHub to production Cloud Run URL and redeploy", "status": "complete"},
+        {"name": "Smoke test: upload a receipt on production URL", "status": "complete"}
       ],
       "commands": {
         "createServiceAccount": "gcloud iam service-accounts create github-actions --display-name='GitHub Actions deployer'",
@@ -383,9 +384,9 @@
   ],
   "metrics": {
     "total": 13,
-    "verified": 7,
-    "inProgress": 1,
+    "verified": 8,
+    "inProgress": 0,
     "pending": 5,
-    "percentComplete": 54
+    "percentComplete": 62
   }
 }

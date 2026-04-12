@@ -2,8 +2,8 @@
 
 **Project**: MedExpense Tracker
 **Started**: 2026-04-10
-**Last Updated**: 2026-04-10
-**Progress**: 7/13 features (54%) — all P0 MVP features complete, deployment in progress
+**Last Updated**: 2026-04-12
+**Progress**: 8/13 features (62%) — all P0 features deployed and live at Cloud Run URL
 
 ---
 
@@ -245,10 +245,59 @@ Once F-DEPLOY is verified, next recommended features:
 
 **F009 — Expense List View** (4.5h)
 - GET /api/expenses route reading rows from Google Sheets API
-- Table page with filters (year, family member, category)
+- Table page with filters (year, family member)
 
 **F008 — Tax Summary View** (3.5h)
-- Aggregate Med 1 / Med 2 totals and per-family-member breakdown
-- Formatted for Irish tax return forms
+- Aggregate totals and per-family-member breakdown
+
+---
+
+## Session 3: Deployment + Post-Launch Fixes — 2026-04-12
+
+### Summary
+Deployed to Google Cloud Run. Resolved multiple production issues. Simplified the app by removing tax category and reimbursement tracking. Tightened Drive file permissions.
+
+### Features Completed
+- **F-DEPLOY** Cloud Run deployment — verified ✅
+  - URL: `https://medexpense-572619161403.europe-west1.run.app`
+  - GitHub Actions CI/CD: push to main → auto deploy (~4 min)
+
+### Production Bugs Fixed
+
+#### 1. Sign-out redirect to /undefined (NextAuth v5 + Cloud Run)
+- **Root cause**: NextAuth v5 builds redirect URL from `NEXTAUTH_URL` env var, which Next.js inlines as `undefined` at build time (not available during CI build)
+- **Fix**: Added `trustHost: true` to NextAuth config — tells NextAuth to derive base URL from request headers instead (correct for Cloud Run behind a load balancer)
+- **File**: `src/lib/auth.ts`
+
+#### 2. Tesseract.js `Cannot find module` in Docker
+- **Root cause**: Next.js standalone build trims `node_modules`; Tesseract worker script's internal requires (`require('..')`, `require('regenerator-runtime/runtime')`) fail
+- **Fix**: Copy full `node_modules` from builder stage into runner stage in Dockerfile
+- **File**: `Dockerfile`
+
+#### 3. Tesseract.js `workerPath` resolution
+- **Root cause**: Next.js server routes resolve module paths differently — Tesseract's default worker path fails
+- **Fix**: Explicit `workerPath` using `path.join(process.cwd(), 'node_modules/tesseract.js/...')`
+- **File**: `src/lib/ocr.ts`
+
+### Features Removed (User Decision)
+- **Tax category (Med 1 / Med 2)** — removed from review form, Sheets columns, parser, constants
+- **Reimbursement tracking** (insurer, reimbursed amount, net claimable) — removed entirely
+- **Reason**: User handles tax categorisation directly in tax return; reimbursement tracked separately
+
+### Other Changes
+- **Drive file permissions**: Removed `reader/anyone` permission — files now private to owner only
+- **Open Tracker link**: Added to header on all authenticated pages
+- **Sheets columns** reduced from 12 to 7: Date | Family Member | Practitioner Type | Treatment | Amount (EUR) | Receipt Link | Upload Date
+
+### Key Commits
+- `0f1ac4b` fix: add trustHost to NextAuth config for Cloud Run deployment
+- `cf5e080` fix: copy full node_modules into standalone container for Tesseract.js
+- `56c56bb` feat: remove tax category and reimbursement fields from app
+- `0807503` fix: remove public Drive permissions — files private to owner only
+- `547702e` feat: add Open Tracker link to header on all authenticated pages
+
+### Next Session
+Run `/epcc-resume` to see current state.
+Next recommended work: **F009 — Expense List View** (read from Sheets, display table with filters).
 
 ---

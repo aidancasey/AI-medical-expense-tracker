@@ -1,8 +1,10 @@
 # AI Medical Expense Tracker
 
-A personal web application for managing family medical expenses and preparing Irish tax returns. Upload a receipt photo or PDF, review the OCR-extracted data, and save it — the app files the receipt to Google Drive and logs the expense to Google Sheets automatically.
+A personal web application for managing family medical expenses. Upload a receipt photo or PDF, review the OCR-extracted data, and save it — the app files the receipt privately to Google Drive and logs the expense to Google Sheets automatically.
 
-Built for the Casey/Roche family to track ~100 receipts/year across 5 family members for Med 1 / Med 2 Irish tax relief claims.
+Built for the Casey/Roche family to track ~100 receipts/year across 5 family members.
+
+**Live app**: `https://medexpense-572619161403.europe-west1.run.app`
 
 ---
 
@@ -11,11 +13,10 @@ Built for the Casey/Roche family to track ~100 receipts/year across 5 family mem
 - **Receipt upload** — drag-and-drop or file picker, JPG and PDF supported
 - **OCR extraction** — automatically reads date, amount, patient name, practitioner type, and treatment from the receipt
 - **Smart review** — editable form pre-populated from OCR; low-confidence fields highlighted in amber
-- **Irish tax classification** — auto-classifies each expense as Med 1 or Med 2 based on practitioner type, with non-routine dental overrides
-- **Reimbursement tracking** — record insurer name and reimbursed amount; net claimable amount calculated automatically
-- **Google Drive filing** — receipt saved to `Medical/[year]/expenses/` with a structured filename
+- **Private Google Drive filing** — receipt saved to `Medical/[year]/expenses/`, accessible only to you
 - **Google Sheets logging** — expense row appended to the correct year tab with a clickable receipt link
 - **Multi-year support** — year derived from the invoice date, not upload date; folders and tabs created automatically
+- **Open Tracker link** — header link to your spreadsheet on every page
 
 ---
 
@@ -36,7 +37,7 @@ flowchart TD
     end
 
     OAuth["Google OAuth\nNextAuth.js"]
-    Drive["Google Drive\nMedical/[year]/expenses/"]
+    Drive["Google Drive\nMedical/[year]/expenses/\n(private)"]
     Sheets["Google Sheets\nMedExpense Tracker"]
 
     User -->|"Sign in"| OAuth
@@ -52,7 +53,7 @@ flowchart TD
 
     User -->|"Confirm"| Review
     Review -->|"confirmed expense + file"| APIExpenses
-    APIExpenses -->|"upload file"| Drive
+    APIExpenses -->|"upload file (private)"| Drive
     APIExpenses -->|"append row"| Sheets
     Drive -->|"receipt link"| Sheets
 ```
@@ -62,13 +63,13 @@ flowchart TD
 1. User uploads a receipt on `/upload`
 2. `POST /api/upload` runs OCR (Tesseract for images, pdf-parse for PDFs) and parses the text into structured fields with confidence scores
 3. Result is stored in `sessionStorage` and user is redirected to `/review`
-4. User reviews and edits pre-populated fields; low-confidence fields are highlighted
-5. On confirm, `POST /api/expenses` uploads the file to Google Drive and appends a row to Google Sheets
+4. User reviews and edits pre-populated fields; low-confidence fields are highlighted in amber
+5. On confirm, `POST /api/expenses` uploads the file privately to Google Drive and appends a row to Google Sheets
 6. Success screen shows links to the filed receipt and spreadsheet
 
 ### Google Sheets columns
 
-| Date | Family Member | Practitioner Type | Treatment | Amount (EUR) | Category | Reimbursed | Insurer | Reimbursed Amount | Net Claimable | Receipt Link | Upload Date |
+| Date | Family Member | Practitioner Type | Treatment | Amount (EUR) | Receipt Link | Upload Date |
 
 ### Google Drive folder structure
 
@@ -84,6 +85,8 @@ My Drive/
 
 `YYYY-MM-DD_FirstName-LastName_PractitionerType_EURAmount.ext`
 
+Files are stored with no public permissions — only your Google account can view them.
+
 ---
 
 ## Tech Stack
@@ -96,9 +99,9 @@ My Drive/
 | OCR | Tesseract.js v7 (WASM, server-side) |
 | PDF parsing | pdf-parse v1.1.1 |
 | Google APIs | googleapis npm package |
-| Deployment | Google Cloud Run |
+| Deployment | Google Cloud Run (europe-west1) |
 | CI/CD | GitHub Actions |
-| Node.js | v22 (see `.nvmrc`) |
+| Node.js | v22 (pinned in `.nvmrc`) |
 
 ---
 
@@ -162,13 +165,15 @@ npm run dev
 
 Open [localhost:3000](http://localhost:3000), sign in with Google, upload a receipt.
 
-On the first save, the app creates a "MedExpense Tracker" spreadsheet in your Drive automatically. To pin it, copy the spreadsheet ID from the URL and add it to `GOOGLE_SPREADSHEET_ID`.
+On the first save, the app creates a "MedExpense Tracker" spreadsheet in your Drive automatically. Copy the spreadsheet ID from the URL and add it to `GOOGLE_SPREADSHEET_ID` to pin it.
 
 ---
 
 ## Deployment (Google Cloud Run)
 
-Pushes to `main` deploy automatically via GitHub Actions.
+Pushes to `main` deploy automatically via GitHub Actions (~4 minutes build time).
+
+**Current deployment**: `https://medexpense-572619161403.europe-west1.run.app`
 
 ### First-time setup
 
@@ -196,12 +201,12 @@ for role in roles/run.admin roles/artifactregistry.writer roles/iam.serviceAccou
     --role="$role"
 done
 
-# Export key — paste contents into GitHub secret, then delete this file
+# Export key — paste contents into GitHub secret GCP_SA_KEY, then delete this file
 gcloud iam service-accounts keys create gha-key.json \
   --iam-account=github-actions@YOUR_PROJECT_ID.iam.gserviceaccount.com
 ```
 
-#### 3. Add GitHub Secrets
+#### 3. GitHub Secrets
 
 Go to: repo → Settings → Secrets and variables → Actions
 
@@ -212,38 +217,31 @@ Go to: repo → Settings → Secrets and variables → Actions
 | `GOOGLE_CLIENT_ID` | OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | OAuth client secret |
 | `NEXTAUTH_SECRET` | Random secret (`openssl rand -base64 32`) |
-| `NEXTAUTH_URL` | Cloud Run URL (update after first deploy) |
+| `NEXTAUTH_URL` | Cloud Run URL |
 | `GOOGLE_SPREADSHEET_ID` | Spreadsheet ID (optional) |
 
-#### 4. Deploy
+#### 4. Post-deploy: update OAuth redirect URI
 
-Push to `main` — GitHub Actions builds the Docker image and deploys to Cloud Run automatically.
-
-#### 5. Post-deploy: update OAuth and NEXTAUTH_URL
-
-Once you have the Cloud Run URL (e.g. `https://medexpense-xxxx-ew.a.run.app`):
-
-1. Google Cloud Console → Credentials → OAuth client → add authorised redirect URI:
-   ```
-   https://YOUR_RUN_URL/api/auth/callback/google
-   ```
-2. Update the `NEXTAUTH_URL` GitHub secret to `https://YOUR_RUN_URL`
-3. Trigger a redeploy:
-   ```bash
-   git commit --allow-empty -m "chore: update NEXTAUTH_URL" && git push
-   ```
+Google Cloud Console → Credentials → OAuth client → Authorised redirect URIs → add:
+```
+https://YOUR_RUN_URL/api/auth/callback/google
+```
 
 ---
 
-## Irish Tax Relief Reference
+## Known Issues & Gotchas
 
-| Category | Practitioner Types |
-|---|---|
-| **Med 1** | GP, Consultant, Physiotherapist, Psychologist, Hospital, Pharmacist, Audiologist |
-| **Med 2** | Dentist (routine), Orthodontist, Optician, Ophthalmologist, Speech Therapist |
-| **Med 2 → Med 1 override** | Non-routine dental: crown, veneer, implant, root canal, bridge, periodontal, surgical |
+### Tesseract.js in Next.js standalone Docker
+Requires explicit `workerPath` using `process.cwd()` and full `node_modules` copied into the container — Next.js standalone build trims dependencies and breaks Tesseract's internal requires.
 
-Med 1 and Med 2 totals are tracked separately in Google Sheets to simplify completing the annual tax return forms.
+### pdf-parse v1.1.1
+Must be required as `pdf-parse/lib/pdf-parse.js` to bypass the self-test that tries to open a local test file. v2 is incompatible (uses `DOMMatrix` which doesn't exist in Node.js).
+
+### NextAuth v5 + Cloud Run
+Requires `trustHost: true` in the NextAuth config — Cloud Run sits behind a load balancer and NextAuth needs to derive the base URL from request headers rather than the `NEXTAUTH_URL` env var (which isn't available at Next.js build time).
+
+### Node.js version
+Must use Node 20, 22, or 24+. Node 23 fails with a cryptic `Cannot find module` error.
 
 ---
 
