@@ -27,8 +27,7 @@ export default async function AuthenticatedLayout({
             <form
               action={async () => {
                 "use server";
-                await signOut({ redirect: false });
-                redirect("/");
+                await signOut({ redirectTo: "/" });
               }}
             >
               <button
