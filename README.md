@@ -245,12 +245,6 @@ Must use Node 20, 22, or 24+. Node 23 fails with a cryptic `Cannot find module` 
 
 ---
 
-## Family Members
-
-Aidan Casey · Kyla Casey · Luca Casey · Mia Casey · Kari Roche
-
----
-
 ## Environment Variables Reference
 
 | Variable | Required | Description |
