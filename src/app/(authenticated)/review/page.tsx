@@ -5,9 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   FAMILY_MEMBERS,
   PRACTITIONER_TYPES,
-  INSURER_OPTIONS,
-  classifyTaxCategory,
-  type TaxCategory,
 } from "@/lib/constants";
 
 interface UploadResult {
@@ -17,7 +14,6 @@ interface UploadResult {
     practitionerType: string;
     treatment: string;
     amount: number | null;
-    taxCategory: TaxCategory;
     confidence: {
       date: number;
       familyMember: number;
@@ -83,10 +79,6 @@ export default function ReviewPage() {
   const [practitionerType, setPractitionerType] = useState("");
   const [treatment, setTreatment] = useState("");
   const [amount, setAmount] = useState("");
-  const [taxCategory, setTaxCategory] = useState<TaxCategory>("Med 1");
-  const [reimbursed, setReimbursed] = useState(false);
-  const [insurerName, setInsurerName] = useState("");
-  const [reimbursedAmount, setReimbursedAmount] = useState("");
 
   useEffect(() => {
     const raw = sessionStorage.getItem("uploadResult");
@@ -103,15 +95,7 @@ export default function ReviewPage() {
     setPractitionerType(e.practitionerType || "");
     setTreatment(e.treatment || "");
     setAmount(e.amount != null ? String(e.amount) : "");
-    setTaxCategory(e.taxCategory || "Med 1");
   }, [router]);
-
-  // Auto-reclassify when practitioner or treatment changes
-  useEffect(() => {
-    if (practitionerType) {
-      setTaxCategory(classifyTaxCategory(practitionerType, treatment));
-    }
-  }, [practitionerType, treatment]);
 
   async function handleSave() {
     if (!uploadResult) return;
@@ -128,10 +112,6 @@ export default function ReviewPage() {
           practitionerType,
           treatment,
           amount,
-          taxCategory,
-          reimbursed,
-          insurerName: reimbursed ? insurerName : "",
-          reimbursedAmount: reimbursed ? reimbursedAmount : "0",
           file: uploadResult.file,
         }),
       });
@@ -309,87 +289,6 @@ export default function ReviewPage() {
                 className={`${inputClass(conf.amount)} pl-7`}
               />
             </div>
-          </div>
-
-          {/* Tax Category */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tax Relief Category
-            </label>
-            <div className="flex gap-6">
-              {(["Med 1", "Med 2"] as TaxCategory[]).map((cat) => (
-                <label key={cat} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="taxCategory"
-                    value={cat}
-                    checked={taxCategory === cat}
-                    onChange={() => setTaxCategory(cat)}
-                    className="h-4 w-4 text-blue-600 border-gray-300"
-                  />
-                  <span className="text-sm text-gray-700">{cat}</span>
-                </label>
-              ))}
-            </div>
-            <p className="mt-1 text-xs text-gray-400">
-              Auto-classified based on practitioner type. Override if needed.
-            </p>
-          </div>
-
-          {/* Reimbursement */}
-          <div className="rounded-lg border border-gray-200 p-4 space-y-3">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={reimbursed}
-                onChange={(e) => setReimbursed(e.target.checked)}
-                className="h-4 w-4 rounded text-blue-600 border-gray-300"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Reimbursed by health insurer
-              </span>
-            </label>
-
-            {reimbursed && (
-              <div className="space-y-3 pt-1">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Insurer
-                  </label>
-                  <select
-                    value={insurerName}
-                    onChange={(e) => setInsurerName(e.target.value)}
-                    className={inputClass()}
-                  >
-                    <option value="">— select insurer —</option>
-                    {INSURER_OPTIONS.map((ins) => (
-                      <option key={ins} value={ins}>
-                        {ins}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Reimbursed Amount (EUR)
-                  </label>
-                  <div className="relative">
-                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-500 text-sm">
-                      €
-                    </span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={reimbursedAmount}
-                      onChange={(e) => setReimbursedAmount(e.target.value)}
-                      placeholder="0.00"
-                      className={`${inputClass()} pl-7`}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 

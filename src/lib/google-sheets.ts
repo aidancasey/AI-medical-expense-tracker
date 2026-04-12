@@ -9,11 +9,6 @@ const HEADERS = [
   "Practitioner Type",
   "Treatment",
   "Amount (EUR)",
-  "Category",
-  "Reimbursed",
-  "Insurer",
-  "Reimbursed Amount",
-  "Net Claimable",
   "Receipt Link",
   "Upload Date",
 ];
@@ -88,7 +83,7 @@ async function ensureYearTab(
   // Add headers to new sheet
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `${year}!A1:L1`,
+    range: `${year}!A1:G1`,
     valueInputOption: "RAW",
     requestBody: {
       values: [HEADERS],
@@ -135,18 +130,13 @@ export async function appendExpenseRow(
     expense.practitionerType,
     expense.treatment,
     expense.amount?.toFixed(2) ?? "",
-    expense.taxCategory,
-    expense.reimbursed ? "Yes" : "No",
-    expense.insurerName || "",
-    expense.reimbursedAmount > 0 ? expense.reimbursedAmount.toFixed(2) : "",
-    expense.netClaimable.toFixed(2),
     expense.receiptLink,
     expense.uploadDate,
   ];
 
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: `${year}!A:L`,
+    range: `${year}!A:G`,
     valueInputOption: "RAW",
     requestBody: {
       values: [row],

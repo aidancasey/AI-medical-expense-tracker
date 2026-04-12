@@ -1,7 +1,6 @@
 import {
   FAMILY_MEMBERS,
   PRACTITIONER_TYPES,
-  classifyTaxCategory,
   type ExtractedExpense,
 } from "./constants";
 
@@ -249,18 +248,12 @@ export function parseReceiptText(text: string): ExtractedExpense {
     identifyPractitioner(text);
   const { treatment, confidence: treatmentConf } = extractTreatment(text);
 
-  const taxCategory = classifyTaxCategory(
-    practitionerType || "Other",
-    treatment
-  );
-
   return {
     date,
     familyMember,
     practitionerType: practitionerType || "",
     treatment,
     amount,
-    taxCategory,
     confidence: {
       date: dateConf,
       familyMember: familyMemberConf,

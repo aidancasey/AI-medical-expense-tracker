@@ -17,10 +17,6 @@ export async function POST(request: NextRequest) {
     practitionerType,
     treatment,
     amount,
-    taxCategory,
-    reimbursed,
-    insurerName,
-    reimbursedAmount,
     file,
   } = body;
 
@@ -33,8 +29,6 @@ export async function POST(request: NextRequest) {
 
   const year = date.split("-")[0];
   const numAmount = parseFloat(amount);
-  const numReimbursed = parseFloat(reimbursedAmount) || 0;
-  const netClaimable = numAmount - numReimbursed;
 
   // Build filename: YYYY-MM-DD_FirstName-LastName_PractitionerType_EURAmount.ext
   const ext = file.mimeType === "application/pdf" ? "pdf" : "jpg";
@@ -60,11 +54,6 @@ export async function POST(request: NextRequest) {
     practitionerType: practitionerType || "Other",
     treatment: treatment || "",
     amount: numAmount,
-    taxCategory,
-    reimbursed: !!reimbursed,
-    insurerName: insurerName || "",
-    reimbursedAmount: numReimbursed,
-    netClaimable,
     receiptLink: webViewLink,
     uploadDate: new Date().toISOString().split("T")[0],
     confidence: {
