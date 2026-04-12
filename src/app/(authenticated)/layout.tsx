@@ -13,6 +13,11 @@ export default async function AuthenticatedLayout({
     redirect("/");
   }
 
+  const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
+  const spreadsheetUrl = spreadsheetId
+    ? `https://docs.google.com/spreadsheets/d/${spreadsheetId}`
+    : "https://docs.google.com/spreadsheets";
+
   return (
     <>
       <header className="bg-white shadow-sm">
@@ -21,6 +26,14 @@ export default async function AuthenticatedLayout({
             MedExpense Tracker
           </Link>
           <div className="flex items-center gap-4">
+            <a
+              href={spreadsheetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              Open Tracker
+            </a>
             <span className="text-sm text-gray-600">
               {session.user?.email}
             </span>
