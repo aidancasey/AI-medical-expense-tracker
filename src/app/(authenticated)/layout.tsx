@@ -27,7 +27,7 @@ export default async function AuthenticatedLayout({
             <form
               action={async () => {
                 "use server";
-                await signOut({ redirectTo: "/" });
+                await signOut({ redirectTo: process.env.NEXTAUTH_URL ?? "/" });
               }}
             >
               <button
