@@ -32,7 +32,7 @@ ENV HOSTNAME="0.0.0.0"
 RUN apk add --no-cache curl && \
     mkdir -p /app/tessdata && \
     curl -L "https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata" \
-    -o /app/tessdata/eng.traineddata && \
+    | gzip > /app/tessdata/eng.traineddata.gz && \
     apk del curl
 
 RUN addgroup --system --gid 1001 nodejs && \
