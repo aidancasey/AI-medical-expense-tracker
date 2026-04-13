@@ -27,6 +27,14 @@ ENV NODE_ENV=production
 ENV PORT=8080
 ENV HOSTNAME="0.0.0.0"
 
+# Download Tesseract language data at build time so it is baked into the
+# image — eliminates the 30-60s CDN download on every cold container start
+RUN apk add --no-cache curl && \
+    mkdir -p /app/tessdata && \
+    curl -L "https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata" \
+    -o /app/tessdata/eng.traineddata && \
+    apk del curl
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 

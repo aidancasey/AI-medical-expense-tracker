@@ -13,9 +13,19 @@ export async function extractTextFromImage(
     process.cwd(),
     "node_modules/tesseract.js/src/worker-script/node/index.js"
   );
+
+  // Use baked-in tessdata if present (Docker image), otherwise let
+  // Tesseract download to its default cache (local dev)
+  const fs = await import("fs");
+  const bakedLangPath = "/app/tessdata";
+  const langPath = fs.existsSync(bakedLangPath) ? bakedLangPath : undefined;
+
   const {
     data: { text, confidence },
-  } = await Tesseract.recognize(buffer, "eng", { workerPath });
+  } = await Tesseract.recognize(buffer, "eng", {
+    workerPath,
+    ...(langPath ? { langPath } : {}),
+  });
   return { text, confidence };
 }
 
