@@ -38,42 +38,49 @@ export async function POST(request: NextRequest) {
 
   const fileBuffer = Buffer.from(file.base64, "base64");
 
-  // Upload to Google Drive
-  const { webViewLink } = await uploadReceiptToDrive(
-    session.accessToken,
-    fileBuffer,
-    file.mimeType,
-    fileName,
-    year
-  );
+  try {
+    // Upload to Google Drive
+    const { webViewLink } = await uploadReceiptToDrive(
+      session.accessToken,
+      fileBuffer,
+      file.mimeType,
+      fileName,
+      year
+    );
 
-  // Write to Google Sheets
-  const expense: SavedExpense = {
-    date,
-    familyMember,
-    practitionerType: practitionerType || "Other",
-    treatment: treatment || "",
-    amount: numAmount,
-    receiptLink: webViewLink,
-    uploadDate: new Date().toISOString().split("T")[0],
-    confidence: {
-      date: 1,
-      familyMember: 1,
-      practitionerType: 1,
-      treatment: 1,
-      amount: 1,
-    },
-  };
+    // Write to Google Sheets
+    const expense: SavedExpense = {
+      date,
+      familyMember,
+      practitionerType: practitionerType || "Other",
+      treatment: treatment || "",
+      amount: numAmount,
+      receiptLink: webViewLink,
+      uploadDate: new Date().toISOString().split("T")[0],
+      confidence: {
+        date: 1,
+        familyMember: 1,
+        practitionerType: 1,
+        treatment: 1,
+        amount: 1,
+      },
+    };
 
-  const { spreadsheetUrl } = await appendExpenseRow(
-    session.accessToken,
-    expense
-  );
+    const { spreadsheetUrl } = await appendExpenseRow(
+      session.accessToken,
+      expense
+    );
 
-  return NextResponse.json({
-    success: true,
-    receiptLink: webViewLink,
-    spreadsheetUrl,
-    fileName,
-  });
+    return NextResponse.json({
+      success: true,
+      receiptLink: webViewLink,
+      spreadsheetUrl,
+      fileName,
+    });
+  } catch (error) {
+    console.error("Failed to save expense:", error);
+    const message =
+      error instanceof Error ? error.message : "Failed to save expense";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
