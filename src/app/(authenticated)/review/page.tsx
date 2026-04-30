@@ -6,30 +6,11 @@ import {
   FAMILY_MEMBERS,
   PRACTITIONER_TYPES,
 } from "@/lib/constants";
-
-interface UploadResult {
-  extracted: {
-    date: string;
-    familyMember: string;
-    practitionerType: string;
-    treatment: string;
-    amount: number | null;
-    confidence: {
-      date: number;
-      familyMember: number;
-      practitionerType: number;
-      treatment: number;
-      amount: number;
-    };
-  };
-  ocrText: string;
-  ocrConfidence: number;
-  file: {
-    base64: string;
-    mimeType: string;
-    originalName: string;
-  };
-}
+import {
+  type UploadResult,
+  getUploadResult,
+  clearUploadResult,
+} from "@/lib/upload-store";
 
 const LOW_CONFIDENCE = 0.6;
 
@@ -81,12 +62,11 @@ export default function ReviewPage() {
   const [amount, setAmount] = useState("");
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("uploadResult");
-    if (!raw) {
+    const result = getUploadResult();
+    if (!result) {
       router.replace("/upload");
       return;
     }
-    const result: UploadResult = JSON.parse(raw);
     setUploadResult(result);
 
     const e = result.extracted;
@@ -119,7 +99,7 @@ export default function ReviewPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Save failed");
 
-      sessionStorage.removeItem("uploadResult");
+      clearUploadResult();
       setSuccess({
         receiptLink: data.receiptLink,
         spreadsheetUrl: data.spreadsheetUrl,

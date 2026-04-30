@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { setUploadResult } from "@/lib/upload-store";
 
 export default function UploadPage() {
   const [isDragging, setIsDragging] = useState(false);
@@ -30,8 +31,7 @@ export default function UploadPage() {
 
         const data = await res.json();
 
-        // Store result in sessionStorage and navigate to review
-        sessionStorage.setItem("uploadResult", JSON.stringify(data));
+        setUploadResult(data);
         router.push("/review");
       } catch (err) {
         setError(
